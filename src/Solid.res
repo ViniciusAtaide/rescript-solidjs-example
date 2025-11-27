@@ -15,14 +15,10 @@ external jsxs: (component<'props>, 'props) => element = "jsxs"
 @module("solid-js/h/jsx-runtime")
 external jsxKeyed: (component<'props>, 'props, ~key: string=?, @ignore unit) => element = "jsx"
 
-/* Fragment: provide a value for typing */
+/* Fragment: use SolidJS's built-in Fragment for proper semantics */
 type fragmentProps = {children?: element}
-let jsxFragment: component<fragmentProps> = props => {
-  switch props.children {
-  | Some(c) => c
-  | None => Jsx.null
-  }
-}
+@module("solid-js/h/jsx-runtime")
+external jsxFragment: component<fragmentProps> = "Fragment"
 
 /* Solid-specific DOM props */
 type style = JsxDOMStyle.t
@@ -141,7 +137,18 @@ external float: float => element = "%identity"
 external int: int => element = "%identity"
 external string: string => element = "%identity"
 
-/* Helper to make accessor reactive in JSX - pass accessor directly without calling it */
+/**
+ * Converts a signal accessor to a reactive element for use in JSX.
+ * 
+ * IMPORTANT: In SolidJS, reactivity only works when accessors are passed
+ * as functions, not when they're called. Use this helper for reactive values:
+ * 
+ * ❌ {int(count())}     - Value is evaluated once, not reactive
+ * ✅ {reactive(count)}  - Accessor is passed as function, stays reactive
+ * 
+ * The hyperscript runtime will call the accessor during rendering and
+ * set up fine-grained reactivity to update only when the signal changes.
+ */
 external reactive: accessor<'a> => element = "%identity"
 
 /* SolidJS Control Flow Components */
